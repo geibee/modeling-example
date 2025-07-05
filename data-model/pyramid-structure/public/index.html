@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>組織階層管理システム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>組織階層管理システム</h1>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('departments')">部門管理</button>
+            <button class="tab-button" onclick="showTab('attributes')">期間別組織属性</button>
+        </div>
+
+        <!-- 部門管理タブ -->
+        <div id="departments" class="tab-content active">
+            <h2>部門一覧</h2>
+            <div class="actions">
+                <button onclick="showDepartmentForm()">新規部門追加</button>
+            </div>
+            
+            <div id="departmentForm" class="form-container" style="display: none;">
+                <h3>部門情報</h3>
+                <form onsubmit="saveDepartment(event)">
+                    <input type="hidden" id="deptEditMode" value="create">
+                    <div class="form-group">
+                        <label for="deptId">部門ID:</label>
+                        <input type="text" id="deptId" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deptName">部門名:</label>
+                        <input type="text" id="deptName" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit">保存</button>
+                        <button type="button" onclick="hideDepartmentForm()">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+            
+            <table id="departmentsTable">
+                <thead>
+                    <tr>
+                        <th>部門ID</th>
+                        <th>部門名</th>
+                        <th>作成日時</th>
+                        <th>更新日時</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="departmentsList"></tbody>
+            </table>
+        </div>
+
+        <!-- 期間別組織属性タブ -->
+        <div id="attributes" class="tab-content">
+            <h2>期間別組織属性</h2>
+            <div class="actions">
+                <button onclick="showAttributeForm()">新規属性追加</button>
+                <select id="deptFilter" onchange="filterAttributes()">
+                    <option value="">全部門</option>
+                </select>
+            </div>
+            
+            <div id="attributeForm" class="form-container" style="display: none;">
+                <h3>組織属性情報</h3>
+                <form onsubmit="saveAttribute(event)">
+                    <input type="hidden" id="attrEditMode" value="create">
+                    <input type="hidden" id="attrOriginalDeptId">
+                    <input type="hidden" id="attrOriginalEffectiveDate">
+                    <div class="form-group">
+                        <label for="attrDeptId">部門ID:</label>
+                        <select id="attrDeptId" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="attrEffectiveDate">発効年月日:</label>
+                        <input type="date" id="attrEffectiveDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="attrParentDeptId">上位部門ID:</label>
+                        <select id="attrParentDeptId">
+                            <option value="">なし（最上位）</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit">保存</button>
+                        <button type="button" onclick="hideAttributeForm()">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+            
+            <table id="attributesTable">
+                <thead>
+                    <tr>
+                        <th>部門ID</th>
+                        <th>部門名</th>
+                        <th>発効年月日</th>
+                        <th>失効年月日</th>
+                        <th>上位部門ID</th>
+                        <th>上位部門名</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="attributesList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
