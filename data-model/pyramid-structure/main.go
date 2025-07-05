@@ -61,6 +61,9 @@ func main() {
 	
 	// 特定部門の履歴を取得
 	api.GET("/departments/:id/history", orgAttrHandler.GetDepartmentHistory)
+	
+	// 特定日付時点の組織階層を取得
+	api.GET("/hierarchy", orgAttrHandler.GetHierarchyByDate)
 
 	// ヘルスチェック
 	e.GET("/health", func(c echo.Context) error {
@@ -68,9 +71,12 @@ func main() {
 	})
 
 	// サーバー起動
-	port := os.Getenv("PORT")
+	port := os.Getenv("APP_PORT")
 	if port == "" {
-		port = "8080"
+		port = os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
 	}
 	e.Logger.Fatal(e.Start(":" + port))
 }

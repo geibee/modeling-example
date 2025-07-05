@@ -13,6 +13,8 @@
         <div class="tabs">
             <button class="tab-button active" onclick="showTab('departments')">部門管理</button>
             <button class="tab-button" onclick="showTab('attributes')">期間別組織属性</button>
+            <button class="tab-button" onclick="showTab('hierarchy')">組織階層</button>
+            <button class="tab-button" onclick="showTab('reorganize')">組織再編</button>
         </div>
 
         <!-- 部門管理タブ -->
@@ -106,6 +108,69 @@
                 </thead>
                 <tbody id="attributesList"></tbody>
             </table>
+        </div>
+
+        <!-- 組織階層タブ -->
+        <div id="hierarchy" class="tab-content">
+            <h2>組織階層ビュー</h2>
+            <div class="hierarchy-controls">
+                <div class="control-group">
+                    <label for="hierarchyDate">基準日:</label>
+                    <input type="date" id="hierarchyDate" onchange="updateHierarchy()">
+                </div>
+                <div class="control-group">
+                    <button onclick="expandAll()">すべて展開</button>
+                    <button onclick="collapseAll()">すべて折りたたむ</button>
+                    <button onclick="exportHierarchy()">JSONエクスポート</button>
+                </div>
+            </div>
+            
+            <div id="hierarchyView" class="hierarchy-container">
+                <div class="hierarchy-loading">データを読み込み中...</div>
+            </div>
+        </div>
+
+        <!-- 組織再編タブ -->
+        <div id="reorganize" class="tab-content">
+            <h2>組織再編</h2>
+            <div class="reorganize-container">
+                <div class="reorganize-form">
+                    <h3>組織移動</h3>
+                    <form onsubmit="moveOrganization(event)">
+                        <div class="form-group">
+                            <label for="moveDeptId">移動する部門:</label>
+                            <select id="moveDeptId" required onchange="updateMovePreview()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="moveTargetId">新しい上位部門:</label>
+                            <select id="moveTargetId" required onchange="updateMovePreview()">
+                                <option value="">なし（最上位へ移動）</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="moveEffectiveDate">発効日:</label>
+                            <input type="date" id="moveEffectiveDate" required onchange="updateMovePreview()">
+                        </div>
+                        <div class="move-preview" id="movePreview">
+                            <p>移動内容を選択してください</p>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit">組織移動を実行</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="reorganize-current">
+                    <h3>現在の組織構造</h3>
+                    <div class="control-group">
+                        <label for="reorganizeDate">基準日:</label>
+                        <input type="date" id="reorganizeDate" onchange="updateReorganizeView()">
+                    </div>
+                    <div id="reorganizeView" class="hierarchy-container">
+                        <div class="hierarchy-loading">データを読み込み中...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

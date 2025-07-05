@@ -45,6 +45,7 @@ h3 {
     border-bottom: 3px solid transparent;
     cursor: pointer;
     font-size: 16px;
+    color: #333;
     transition: all 0.3s ease;
 }
 
@@ -198,4 +199,191 @@ select:focus {
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 20px;
+}
+
+/* 組織階層ビュー用のスタイル */
+.hierarchy-controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.control-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.control-group label {
+    margin-bottom: 0;
+}
+
+#hierarchyDate {
+    width: 200px;
+}
+
+.hierarchy-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-height: 500px;
+}
+
+.hierarchy-loading {
+    text-align: center;
+    color: #6c757d;
+    padding: 40px;
+}
+
+.tree-node {
+    margin-left: 20px;
+}
+
+.tree-node-content {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tree-node-content:hover {
+    background-color: #f0f0f0;
+}
+
+.tree-toggle {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.tree-toggle:hover {
+    background-color: #e9ecef;
+    border-radius: 3px;
+}
+
+.tree-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+
+.tree-label {
+    flex: 1;
+    font-weight: 500;
+}
+
+.tree-info {
+    font-size: 12px;
+    color: #6c757d;
+    margin-left: 8px;
+}
+
+.tree-root > .tree-node-content {
+    background-color: #e3f2fd;
+    font-weight: 600;
+}
+
+.tree-root > .tree-node-content:hover {
+    background-color: #bbdefb;
+}
+
+.tree-children {
+    margin-left: 28px;
+    border-left: 1px dashed #dee2e6;
+    display: none;
+}
+
+.tree-children.expanded {
+    display: block;
+}
+
+.tree-node:last-child > .tree-children {
+    border-left: none;
+}
+
+/* 組織再編タブ用のスタイル */
+.reorganize-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.reorganize-form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reorganize-current {
+    background-color: white;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.move-preview {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    min-height: 80px;
+}
+
+.move-preview h4 {
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.move-preview p {
+    margin: 5px 0;
+    color: #6c757d;
+}
+
+.move-preview .preview-success {
+    color: #155724;
+    background-color: #d4edda;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.move-preview .preview-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+#reorganizeDate {
+    width: 200px;
+}
+
+@media (max-width: 768px) {
+    .reorganize-container {
+        grid-template-columns: 1fr;
+    }
 }

@@ -147,3 +147,27 @@ func (h *OrganizationAttributeHandler) Delete(c echo.Context) error {
 	
 	return c.NoContent(http.StatusNoContent)
 }
+
+// GetHierarchyByDate 特定日付時点の組織階層を取得
+func (h *OrganizationAttributeHandler) GetHierarchyByDate(c echo.Context) error {
+	dateStr := c.QueryParam("date")
+	if dateStr == "" {
+		// 日付が指定されない場合は現在日付を使用
+		dateStr = time.Now().Format("2006-01-02")
+	}
+	
+	targetDate, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid date format. Use YYYY-MM-DD"})
+	}
+	
+	attrs, err := h.repo.GetHierarchyByDate(targetDate)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"date": targetDate.Format("2006-01-02"),
+		"attributes": attrs,
+	})
+}

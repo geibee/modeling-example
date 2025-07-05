@@ -191,3 +191,52 @@ func (r *OrganizationAttributeRepository) Delete(departmentID string, effectiveD
 	
 	return nil
 }
+
+// GetHierarchyByDate 特定日付時点の組織階層を取得
+func (r *OrganizationAttributeRepository) GetHierarchyByDate(targetDate time.Time) ([]OrganizationAttribute, error) {
+	query := `
+		WITH latest_attrs AS (
+			SELECT DISTINCT ON (department_id) 
+				department_id,
+				effective_date,
+				parent_department_id,
+				created_at,
+				updated_at
+			FROM organization_attributes
+			WHERE effective_date <= $1
+			ORDER BY department_id, effective_date DESC
+		)
+		SELECT 
+			la.department_id,
+			la.effective_date,
+			la.parent_department_id,
+			(
+				SELECT MIN(oa2.effective_date) - INTERVAL '1 day'
+				FROM organization_attributes oa2
+				WHERE oa2.department_id = la.department_id
+				AND oa2.effective_date > la.effective_date
+			) AS expiration_date,
+			la.created_at,
+			la.updated_at
+		FROM latest_attrs la
+		ORDER BY la.department_id`
+	
+	rows, err := r.db.Query(query, targetDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var attrs []OrganizationAttribute
+	for rows.Next() {
+		var a OrganizationAttribute
+		err := rows.Scan(&a.DepartmentID, &a.EffectiveDate, &a.ParentDepartmentID, 
+			&a.ExpirationDate, &a.CreatedAt, &a.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		attrs = append(attrs, a)
+	}
+
+	return attrs, nil
+}
