@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>品目コード体系管理システム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>品目コード体系管理システム</h1>
+        
+        <div class="controls">
+            <button onclick="showCreateForm()" class="btn btn-primary">新規品目追加</button>
+            <select id="categoryFilter" onchange="loadItems()">
+                <option value="">全ての品種</option>
+                <option value="A">A品種</option>
+                <option value="B">B品種</option>
+            </select>
+        </div>
+
+        <div id="createForm" class="form-container" style="display: none;">
+            <h2>新規品目追加</h2>
+            <form onsubmit="createItem(event)">
+                <div class="form-group">
+                    <label>品目ID:</label>
+                    <input type="text" id="itemId" required>
+                </div>
+                <div class="form-group">
+                    <label>品目名:</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                <div class="form-group">
+                    <label>品種区分:</label>
+                    <select id="categoryType" onchange="toggleCategoryFields()" required>
+                        <option value="">選択してください</option>
+                        <option value="A">A品種</option>
+                        <option value="B">B品種</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>品目コード:</label>
+                    <input type="text" id="itemCode" required>
+                </div>
+                
+                <div id="categoryAFields" style="display: none;">
+                    <div class="form-group">
+                        <label>容量:</label>
+                        <input type="number" step="0.01" id="capacity">
+                    </div>
+                    <div class="form-group">
+                        <label>材質:</label>
+                        <input type="text" id="material">
+                    </div>
+                </div>
+                
+                <div id="categoryBFields" style="display: none;">
+                    <div class="form-group">
+                        <label>内径:</label>
+                        <input type="number" step="0.01" id="innerDiameter">
+                    </div>
+                    <div class="form-group">
+                        <label>外径:</label>
+                        <input type="number" step="0.01" id="outerDiameter">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">追加</button>
+                    <button type="button" onclick="hideCreateForm()" class="btn btn-secondary">キャンセル</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="editForm" class="form-container" style="display: none;">
+            <h2>品目編集</h2>
+            <form onsubmit="updateItem(event)">
+                <input type="hidden" id="editItemId">
+                <input type="hidden" id="editCategoryType">
+                
+                <div class="form-group">
+                    <label>品目名:</label>
+                    <input type="text" id="editItemName">
+                </div>
+                <div class="form-group">
+                    <label>品目コード:</label>
+                    <input type="text" id="editItemCode">
+                </div>
+                
+                <div id="editCategoryAFields" style="display: none;">
+                    <div class="form-group">
+                        <label>容量:</label>
+                        <input type="number" step="0.01" id="editCapacity">
+                    </div>
+                    <div class="form-group">
+                        <label>材質:</label>
+                        <input type="text" id="editMaterial">
+                    </div>
+                </div>
+                
+                <div id="editCategoryBFields" style="display: none;">
+                    <div class="form-group">
+                        <label>内径:</label>
+                        <input type="number" step="0.01" id="editInnerDiameter">
+                    </div>
+                    <div class="form-group">
+                        <label>外径:</label>
+                        <input type="number" step="0.01" id="editOuterDiameter">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">更新</button>
+                    <button type="button" onclick="hideEditForm()" class="btn btn-secondary">キャンセル</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="itemsList" class="items-container">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>品目ID</th>
+                        <th>品目名</th>
+                        <th>品種区分</th>
+                        <th>品目コード</th>
+                        <th>詳細属性</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="pagination" class="pagination"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
