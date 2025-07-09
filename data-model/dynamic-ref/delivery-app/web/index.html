@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配送管理システム</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>配送管理システム</h1>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('customers')">顧客マスタ</button>
+            <button class="tab-button" onclick="showTab('regions')">地域別配達方法</button>
+            <button class="tab-button" onclick="showTab('prefectures')">都道府県マスタ</button>
+        </div>
+
+        <div id="customers" class="tab-content active">
+            <h2>顧客マスタ</h2>
+            <button class="btn-primary" onclick="showCustomerForm()">新規顧客登録</button>
+            
+            <div id="customerForm" class="form-container" style="display: none;">
+                <h3>顧客情報入力</h3>
+                <form onsubmit="saveCustomer(event)">
+                    <input type="hidden" id="customerId">
+                    <div class="form-group">
+                        <label for="customerName">顧客名:</label>
+                        <input type="text" id="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="prefecture">都道府県:</label>
+                        <select id="prefecture" required onchange="updateDeliveryMethods()">
+                            <option value="">選択してください</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="deliveryMethod">配達方法:</label>
+                        <select id="deliveryMethod" required>
+                            <option value="">都道府県を選択してください</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">保存</button>
+                    <button type="button" class="btn-secondary" onclick="hideCustomerForm()">キャンセル</button>
+                </form>
+            </div>
+
+            <table id="customersTable">
+                <thead>
+                    <tr>
+                        <th>顧客ID</th>
+                        <th>顧客名</th>
+                        <th>都道府県</th>
+                        <th>地域</th>
+                        <th>配達方法</th>
+                        <th>標準配達日数</th>
+                        <th>標準配達料金</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="regions" class="tab-content">
+            <h2>地域別配達方法マスタ</h2>
+            <table id="regionsTable">
+                <thead>
+                    <tr>
+                        <th>地域</th>
+                        <th>配達方法</th>
+                        <th>標準配達日数</th>
+                        <th>標準配達料金</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="prefectures" class="tab-content">
+            <h2>都道府県マスタ</h2>
+            <table id="prefecturesTable">
+                <thead>
+                    <tr>
+                        <th>都道府県</th>
+                        <th>地域</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
