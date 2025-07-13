@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>権限管理システム - メインメニュー</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>権限管理システム</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>メインメニュー</h2>
+            
+            <div class="menu-grid">
+                <div class="menu-item">
+                    <h3>予算管理</h3>
+                    <p>予算の計画、実績管理、承認処理</p>
+                    <a href="/budget" class="btn" id="btn-budget" data-screen-id="001">予算管理画面へ</a>
+                </div>
+
+                <div class="menu-item">
+                    <h3>販売管理</h3>
+                    <p>販売データの入力、集計、分析</p>
+                    <a href="/sales" class="btn" id="btn-sales" data-screen-id="002">販売管理画面へ</a>
+                </div>
+
+                <div class="menu-item">
+                    <h3>在庫管理</h3>
+                    <p>在庫状況の確認、入出庫管理</p>
+                    <a href="/inventory" class="btn" id="btn-inventory" data-screen-id="003">在庫管理画面へ</a>
+                </div>
+
+                <div class="menu-item admin">
+                    <h3>権限マスタ管理</h3>
+                    <p>メニュー設定、API権限の管理</p>
+                    <a href="/admin" class="btn" id="btn-admin" data-screen-id="004">管理画面へ</a>
+                </div>
+
+                <div class="menu-item admin">
+                    <h3>ユーザーマスタ管理</h3>
+                    <p>ユーザー情報、組織所属の管理</p>
+                    <a href="/user" class="btn" id="btn-user" data-screen-id="005">ユーザー管理画面へ</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>テストユーザー情報</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ユーザーID</th>
+                        <th>ロール</th>
+                        <th>アクセス可能画面</th>
+                        <th>備考</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>user001</td>
+                        <td>管理職</td>
+                        <td>予算管理</td>
+                        <td>予算画面(001)にアクセス可能</td>
+                    </tr>
+                    <tr>
+                        <td>user002</td>
+                        <td>営業担当</td>
+                        <td>販売管理</td>
+                        <td>販売画面(002)にアクセス可能</td>
+                    </tr>
+                    <tr>
+                        <td>user003</td>
+                        <td>在庫管理者</td>
+                        <td>在庫管理</td>
+                        <td>在庫画面(003)にアクセス可能</td>
+                    </tr>
+                    <tr>
+                        <td>admin</td>
+                        <td>システム管理者</td>
+                        <td>すべて</td>
+                        <td>全画面にアクセス可能</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>システム概要</h2>
+            <p>このシステムは、ロールベースのアクセス制御（RBAC）を実装したデモアプリケーションです。</p>
+            <ul>
+                <li>ユーザーごとに異なるロールが割り当てられています</li>
+                <li>各ロールは特定の画面やAPIへのアクセス権限を持っています</li>
+                <li>権限がない画面にアクセスしようとすると、アクセス拒否されます</li>
+                <li>管理画面から権限の設定を変更できます</li>
+            </ul>
+        </div>
+    </div>
+
+    <style>
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .menu-item {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .menu-item h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .menu-item p {
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .menu-item.admin {
+            background-color: #e8f4f8;
+        }
+        
+        .card ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .card ul li {
+            margin-bottom: 5px;
+        }
+    </style>
+    <script src="/static/js/user-switcher.js"></script>
+    <script src="/static/js/side-menu.js"></script>
+    <script>
+        // ユーザーの権限情報を取得してボタンの状態を更新
+        async function updateButtonStates() {
+            try {
+                const response = await fetch('/api/user-permissions', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const screenPermissions = data.screens || {};
+                    
+                    // 各ボタンの状態を更新
+                    document.querySelectorAll('.btn[data-screen-id]').forEach(button => {
+                        const screenId = button.getAttribute('data-screen-id');
+                        const hasPermission = screenPermissions[screenId] === true;
+                        
+                        if (hasPermission) {
+                            // 権限がある場合
+                            button.classList.remove('btn-secondary');
+                            button.classList.add('btn-enabled');
+                            button.style.pointerEvents = 'auto';
+                            button.style.opacity = '1';
+                        } else {
+                            // 権限がない場合
+                            button.classList.add('btn-secondary');
+                            button.classList.remove('btn-enabled');
+                            button.style.pointerEvents = 'none';
+                            button.style.opacity = '0.6';
+                            button.title = 'この画面へのアクセス権限がありません';
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('権限情報の取得に失敗:', error);
+            }
+        }
+        
+        // ページ読み込み時に権限情報を更新
+        document.addEventListener('DOMContentLoaded', () => {
+            updateButtonStates();
+        });
+        
+        // ユーザー切り替え時にも更新（user-switcherがリロードするため不要だが念のため）
+        window.addEventListener('focus', () => {
+            updateButtonStates();
+        });
+    </script>
+</body>
+</html>

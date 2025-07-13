@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>権限マスタ管理画面</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>権限マスタ管理システム</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>管理メニュー</h2>
+            
+            <ul class="nav-tabs">
+                <li><a href="#menu-settings" class="active" onclick="showTab('menu-settings', this)">メニュー設定</a></li>
+                <li><a href="#api-mappings" onclick="showTab('api-mappings', this)">API画面マッピング</a></li>
+                <li><a href="#role-mappings" onclick="showTab('role-mappings', this)">ロール権限マッピング</a></li>
+            </ul>
+
+            <div id="menu-settings" class="tab-content active">
+                <h3>メニュー設定管理</h3>
+                
+                <div class="actions">
+                    <button class="btn btn-success" onclick="showAddMenuModal()">新規メニュー追加</button>
+                </div>
+
+                <table id="menu-table">
+                    <thead>
+                        <tr>
+                            <th>メニューID</th>
+                            <th>メニュー名</th>
+                            <th>画面ID</th>
+                            <th>アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="api-mappings" class="tab-content">
+                <h3>API画面マッピング管理</h3>
+                
+                <div class="actions">
+                    <button class="btn btn-success" onclick="showAddMappingModal()">新規マッピング追加</button>
+                </div>
+
+                <table id="mapping-table">
+                    <thead>
+                        <tr>
+                            <th>画面ID</th>
+                            <th>API ID</th>
+                            <th>説明</th>
+                            <th>アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="role-mappings" class="tab-content">
+                <h3>ロール権限マッピング管理</h3>
+                
+                <div class="inline-form">
+                    <div class="form-group">
+                        <label for="role-select">ロール選択:</label>
+                        <select id="role-select" class="form-control" onchange="loadRolePermissions()">
+                            <option value="">ロールを選択してください</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success" onclick="loadRoles()">更新</button>
+                </div>
+
+                <div id="role-permissions" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メニュー追加モーダル -->
+    <div id="menu-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('menu-modal')">&times;</span>
+            <h3 id="menu-modal-title">メニュー追加</h3>
+            <form id="menu-form" onsubmit="saveMenu(event)">
+                <input type="hidden" id="menu-id-original">
+                <div class="form-group">
+                    <label for="menu-id">メニューID:</label>
+                    <input type="text" id="menu-id" class="form-control" required maxlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="menu-name">メニュー名:</label>
+                    <input type="text" id="menu-name" class="form-control" required maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label for="screen-id">画面ID:</label>
+                    <input type="text" id="screen-id" class="form-control" required maxlength="3">
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn btn-success">保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('menu-modal')">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- マッピング追加モーダル -->
+    <div id="mapping-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('mapping-modal')">&times;</span>
+            <h3 id="mapping-modal-title">マッピング追加</h3>
+            <form id="mapping-form" onsubmit="saveMapping(event)">
+                <input type="hidden" id="mapping-original-screen-id">
+                <input type="hidden" id="mapping-original-api-id">
+                <div class="form-group">
+                    <label for="mapping-screen-id">画面ID:</label>
+                    <input type="text" id="mapping-screen-id" class="form-control" required maxlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="mapping-api-id">API ID:</label>
+                    <input type="text" id="mapping-api-id" class="form-control" required maxlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="mapping-description">説明:</label>
+                    <textarea id="mapping-description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn btn-success">保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('mapping-modal')">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="alert-container"></div>
+    
+    <script>
+        // セッション確認（認可チェック用）
+        async function checkSession() {
+            try {
+                const response = await fetch('/api/session');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!data.authenticated) {
+                        // 未認証の場合はログインページにリダイレクト
+                        window.location.href = '/login';
+                    }
+                } else {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('セッション確認エラー:', error);
+                window.location.href = '/login';
+            }
+        }
+        checkSession();
+    </script>
+
+    <script src="/static/js/admin.js"></script>
+    <script src="/static/js/user-switcher.js"></script>
+    <script src="/static/js/side-menu.js"></script>
+</body>
+</html>

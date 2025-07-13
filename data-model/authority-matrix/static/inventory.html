@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在庫管理画面</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>在庫管理システム</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>在庫一覧</h2>
+            
+            <div id="access-info" class="alert alert-info">
+                <p>ログインユーザー: <span id="user-id"></span></p>
+                <p>ロール: <span id="roles"></span></p>
+                <p>所属組織: <span id="organizations"></span></p>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-success" onclick="addInventory()">新規在庫登録</button>
+                <button class="btn btn-secondary" onclick="exportInventory()">在庫データエクスポート</button>
+                <button class="btn" onclick="refreshData()">更新</button>
+            </div>
+
+            <div class="inline-form" style="margin: 20px 0;">
+                <div class="form-group">
+                    <label for="search">商品検索:</label>
+                    <input type="text" id="search" class="form-control" placeholder="商品名で検索..." onkeyup="searchInventory()">
+                </div>
+                <div class="form-group">
+                    <label for="filter-status">ステータス:</label>
+                    <select id="filter-status" class="form-control" onchange="filterInventory()">
+                        <option value="">すべて</option>
+                        <option value="in-stock">在庫あり</option>
+                        <option value="low-stock">在庫少</option>
+                        <option value="out-of-stock">在庫なし</option>
+                    </select>
+                </div>
+            </div>
+
+            <table id="inventory-table">
+                <thead>
+                    <tr>
+                        <th>商品コード</th>
+                        <th>組織</th>
+                        <th>商品名</th>
+                        <th>カテゴリ</th>
+                        <th>在庫数</th>
+                        <th>ステータス</th>
+                        <th>最終更新</th>
+                        <th>アクション</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="8" style="text-align: center;">データを読み込み中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>在庫アラート</h2>
+            <div id="alerts">
+                <div class="alert alert-error">
+                    <strong>在庫切れ商品:</strong> <span id="out-of-stock-count">0</span> 件
+                </div>
+                <div class="alert alert-info">
+                    <strong>在庫少商品:</strong> <span id="low-stock-count">0</span> 件
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let inventoryData = [];
+
+        // 共通のdisplayUserInfo関数を使用
+
+        // 在庫データの取得
+        async function loadInventoryData() {
+            try {
+                // 実際のアプリケーションではback-inventory APIを呼び出す
+                const response = await fetch('/back-inventory', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    inventoryData = await response.json();
+                } else if (response.status === 403) {
+                    showError('この画面へのアクセス権限がありません');
+                    return;
+                } else {
+                    // モックデータ
+                    inventoryData = [
+                        { code: 'P001', name: 'ノートPC', category: '電子機器', stock: 15, status: 'in-stock', updated: '2024-01-20' },
+                        { code: 'P002', name: 'モニター', category: '電子機器', stock: 3, status: 'low-stock', updated: '2024-01-19' },
+                        { code: 'P003', name: 'キーボード', category: '周辺機器', stock: 0, status: 'out-of-stock', updated: '2024-01-18' },
+                        { code: 'P004', name: 'マウス', category: '周辺機器', stock: 25, status: 'in-stock', updated: '2024-01-20' },
+                        { code: 'P005', name: 'USBケーブル', category: 'アクセサリ', stock: 2, status: 'low-stock', updated: '2024-01-17' }
+                    ];
+                }
+                
+                displayInventoryData(inventoryData);
+                updateAlerts(inventoryData);
+            } catch (error) {
+                console.error('データ取得エラー:', error);
+                showError('データの取得に失敗しました');
+            }
+        }
+
+        // 在庫データを表示
+        function displayInventoryData(data) {
+            const tbody = document.querySelector('#inventory-table tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                const row = tbody.insertRow();
+                const statusClass = getStatusClass(item.status);
+                row.innerHTML = `
+                    <td>${item.code}</td>
+                    <td>${item.org_name || item.org_id || '-'}</td>
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td>${item.stock}</td>
+                    <td><span class="badge ${statusClass}">${getStatusText(item.status)}</span></td>
+                    <td>${item.updated}</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="updateStock('${item.code}')">在庫更新</button>
+                        <button class="btn btn-sm btn-secondary" onclick="viewHistory('${item.code}')">履歴</button>
+                    </td>
+                `;
+            });
+        }
+
+        // ステータスのクラスを取得
+        function getStatusClass(status) {
+            switch(status) {
+                case 'in-stock': return 'badge-success';
+                case 'low-stock': return 'badge-warning';
+                case 'out-of-stock': return 'badge-danger';
+                default: return '';
+            }
+        }
+
+        // ステータスのテキストを取得
+        function getStatusText(status) {
+            switch(status) {
+                case 'in-stock': return '在庫あり';
+                case 'low-stock': return '在庫少';
+                case 'out-of-stock': return '在庫なし';
+                default: return status;
+            }
+        }
+
+        // アラートを更新
+        function updateAlerts(data) {
+            const outOfStock = data.filter(item => item.status === 'out-of-stock').length;
+            const lowStock = data.filter(item => item.status === 'low-stock').length;
+            
+            document.getElementById('out-of-stock-count').textContent = outOfStock;
+            document.getElementById('low-stock-count').textContent = lowStock;
+        }
+
+        // 検索機能
+        function searchInventory() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const filtered = inventoryData.filter(item => 
+                item.name.toLowerCase().includes(searchTerm) ||
+                item.code.toLowerCase().includes(searchTerm)
+            );
+            displayInventoryData(filtered);
+        }
+
+        // フィルター機能
+        function filterInventory() {
+            const status = document.getElementById('filter-status').value;
+            const filtered = status ? 
+                inventoryData.filter(item => item.status === status) : 
+                inventoryData;
+            displayInventoryData(filtered);
+        }
+
+        // エラー表示
+        function showError(message) {
+            const tbody = document.querySelector('#inventory-table tbody');
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">${message}</td></tr>`;
+        }
+
+        // ダミー関数
+        function addInventory() {
+            alert('新規在庫登録機能は準備中です');
+        }
+
+        function updateStock(code) {
+            const newStock = prompt(`商品コード ${code} の新しい在庫数を入力してください:`);
+            if (newStock !== null) {
+                alert('在庫更新機能は準備中です');
+            }
+        }
+
+        function viewHistory(code) {
+            alert(`商品コード ${code} の在庫履歴表示機能は準備中です`);
+        }
+
+        function exportInventory() {
+            alert('在庫データエクスポート機能は準備中です');
+        }
+
+        function refreshData() {
+            loadInventoryData();
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // ユーザー情報を先に読み込む
+            await displayUserInfo();
+            // ユーザー情報の読み込みが完了してから在庫データを読み込む
+            loadInventoryData();
+        });
+    </script>
+
+    <style>
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        .badge-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        .badge-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+    </style>
+    <script src="/static/js/common-user-info.js"></script>
+    <script src="/static/js/user-switcher.js"></script>
+    <script src="/static/js/side-menu.js"></script>
+</body>
+</html>

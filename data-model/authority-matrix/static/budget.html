@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>予算管理画面</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>予算管理システム</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>予算計画</h2>
+            
+            <div id="access-info" class="alert alert-info">
+                <p>ログインユーザー: <span id="user-id"></span></p>
+                <p>ロール: <span id="roles"></span></p>
+                <p>所属組織: <span id="organizations"></span></p>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-success" onclick="createBudget()">新規予算作成</button>
+                <button class="btn" onclick="importBudget()">予算インポート</button>
+                <button class="btn btn-secondary" onclick="exportBudget()">予算エクスポート</button>
+            </div>
+
+            <table id="budget-table">
+                <thead>
+                    <tr>
+                        <th>予算ID</th>
+                        <th>組織</th>
+                        <th>部門</th>
+                        <th>期間</th>
+                        <th>予算額</th>
+                        <th>使用済額</th>
+                        <th>残額</th>
+                        <th>使用率</th>
+                        <th>アクション</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="9" style="text-align: center;">データを読み込み中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>予算サマリー</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div class="summary-item">
+                    <h4>総予算額</h4>
+                    <p class="summary-value">¥<span id="total-budget">0</span></p>
+                </div>
+                <div class="summary-item">
+                    <h4>使用済額</h4>
+                    <p class="summary-value">¥<span id="total-used">0</span></p>
+                </div>
+                <div class="summary-item">
+                    <h4>残額</h4>
+                    <p class="summary-value">¥<span id="total-remaining">0</span></p>
+                </div>
+                <div class="summary-item">
+                    <h4>全体使用率</h4>
+                    <p class="summary-value"><span id="overall-usage">0</span>%</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>予算履歴</h2>
+            <table id="history-table">
+                <thead>
+                    <tr>
+                        <th>日時</th>
+                        <th>部門</th>
+                        <th>種別</th>
+                        <th>金額</th>
+                        <th>承認者</th>
+                        <th>備考</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" style="text-align: center;">履歴データなし</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let budgetData = [];
+
+        // 共通のdisplayUserInfo関数を使用
+
+        // 予算データの取得
+        async function loadBudgetData() {
+            try {
+                // back-budget1 APIを呼び出す
+                const response = await fetch('/back-budget1', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // 実際のデータが返ってきた場合はそれを使用
+                    if (data && data.budgets) {
+                        budgetData = data.budgets;
+                    } else {
+                        // モックデータ
+                        budgetData = getMockBudgetData();
+                    }
+                } else if (response.status === 403) {
+                    showError('この画面へのアクセス権限がありません');
+                    return;
+                } else {
+                    // エラー時もモックデータを使用
+                    budgetData = getMockBudgetData();
+                }
+                
+                displayBudgetData(budgetData);
+                updateSummary(budgetData);
+                loadHistory();
+            } catch (error) {
+                console.error('データ取得エラー:', error);
+                // エラー時もモックデータを表示
+                budgetData = getMockBudgetData();
+                displayBudgetData(budgetData);
+                updateSummary(budgetData);
+            }
+        }
+
+        // モックデータの生成
+        function getMockBudgetData() {
+            return [
+                { id: 'B001', department: '営業部', period: '2024年Q1', budget: 5000000, used: 3200000, remaining: 1800000, usage: 64 },
+                { id: 'B002', department: '開発部', period: '2024年Q1', budget: 8000000, used: 6500000, remaining: 1500000, usage: 81.25 },
+                { id: 'B003', department: 'マーケティング部', period: '2024年Q1', budget: 3000000, used: 1200000, remaining: 1800000, usage: 40 },
+                { id: 'B004', department: '管理部', period: '2024年Q1', budget: 2000000, used: 800000, remaining: 1200000, usage: 40 },
+                { id: 'B005', department: '人事部', period: '2024年Q1', budget: 1500000, used: 900000, remaining: 600000, usage: 60 }
+            ];
+        }
+
+        // 予算データを表示
+        function displayBudgetData(data) {
+            const tbody = document.querySelector('#budget-table tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                const row = tbody.insertRow();
+                const usageClass = item.usage > 80 ? 'text-danger' : item.usage > 60 ? 'text-warning' : 'text-success';
+                row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.org_name || item.org_id || '-'}</td>
+                    <td>${item.department}</td>
+                    <td>${item.period}</td>
+                    <td>¥${item.budget.toLocaleString()}</td>
+                    <td>¥${item.used.toLocaleString()}</td>
+                    <td>¥${item.remaining.toLocaleString()}</td>
+                    <td class="${usageClass}">${item.usage}%</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="editBudget('${item.id}')">編集</button>
+                        <button class="btn btn-sm btn-secondary" onclick="viewDetails('${item.id}')">詳細</button>
+                    </td>
+                `;
+            });
+        }
+
+        // サマリー情報を更新
+        function updateSummary(data) {
+            const totalBudget = data.reduce((sum, item) => sum + item.budget, 0);
+            const totalUsed = data.reduce((sum, item) => sum + item.used, 0);
+            const totalRemaining = totalBudget - totalUsed;
+            const overallUsage = totalBudget > 0 ? (totalUsed / totalBudget * 100).toFixed(1) : 0;
+            
+            document.getElementById('total-budget').textContent = totalBudget.toLocaleString();
+            document.getElementById('total-used').textContent = totalUsed.toLocaleString();
+            document.getElementById('total-remaining').textContent = totalRemaining.toLocaleString();
+            document.getElementById('overall-usage').textContent = overallUsage;
+        }
+
+        // 履歴データの読み込み（モック）
+        function loadHistory() {
+            const historyData = [
+                { date: '2024-01-20 10:30', department: '営業部', type: '経費精算', amount: 150000, approver: '山田太郎', note: '出張費' },
+                { date: '2024-01-19 15:45', department: '開発部', type: '備品購入', amount: 280000, approver: '鈴木花子', note: '開発用PC' },
+                { date: '2024-01-18 09:00', department: 'マーケティング部', type: '広告費', amount: 500000, approver: '佐藤次郎', note: 'Web広告' }
+            ];
+            
+            const tbody = document.querySelector('#history-table tbody');
+            tbody.innerHTML = '';
+            
+            historyData.forEach(item => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${item.date}</td>
+                    <td>${item.department}</td>
+                    <td>${item.type}</td>
+                    <td>¥${item.amount.toLocaleString()}</td>
+                    <td>${item.approver}</td>
+                    <td>${item.note}</td>
+                `;
+            });
+        }
+
+        // エラー表示
+        function showError(message) {
+            const tbody = document.querySelector('#budget-table tbody');
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: red;">${message}</td></tr>`;
+        }
+
+        // ダミー関数
+        function createBudget() {
+            alert('新規予算作成機能は準備中です');
+        }
+
+        function editBudget(id) {
+            alert(`予算ID ${id} の編集機能は準備中です`);
+        }
+
+        function viewDetails(id) {
+            alert(`予算ID ${id} の詳細表示機能は準備中です`);
+        }
+
+        function importBudget() {
+            alert('予算インポート機能は準備中です');
+        }
+
+        function exportBudget() {
+            alert('予算エクスポート機能は準備中です');
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // ユーザー情報を先に読み込む
+            await displayUserInfo();
+            // ユーザー情報の読み込みが完了してから予算データを読み込む
+            loadBudgetData();
+        });
+    </script>
+
+    <style>
+        .summary-item {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .summary-item h4 {
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .text-success {
+            color: #27ae60;
+        }
+        .text-warning {
+            color: #f39c12;
+        }
+        .text-danger {
+            color: #e74c3c;
+        }
+    </style>
+    <script src="/static/js/common-user-info.js"></script>
+    <script src="/static/js/user-switcher.js"></script>
+    <script src="/static/js/side-menu.js"></script>
+</body>
+</html>

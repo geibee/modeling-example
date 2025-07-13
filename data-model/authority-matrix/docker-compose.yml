@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: authority-postgres
+    environment:
+      POSTGRES_DB: authority_db
+      POSTGRES_USER: authority_user
+      POSTGRES_PASSWORD: authority_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authority_user -d authority_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: authority-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: authority_user
+      DB_PASSWORD: authority_pass
+      DB_NAME: authority_db
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: go run main.go
+
+volumes:
+  postgres_data:

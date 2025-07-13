@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザーマスタ管理 - 権限管理システム</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>ユーザーマスタ管理</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>ユーザー一覧</h2>
+                <div>
+                    <button class="btn btn-success" onclick="showAddUserModal()">新規ユーザー追加</button>
+                    <a href="/" class="btn btn-secondary">メインメニューに戻る</a>
+                </div>
+            </div>
+            
+            <table id="userTable">
+                <thead>
+                    <tr>
+                        <th>ユーザーID</th>
+                        <th>ユーザー名</th>
+                        <th>ロール</th>
+                        <th>所属組織</th>
+                        <th>状態</th>
+                        <th>アクション</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <!-- JavaScriptで動的に挿入 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ユーザー編集モーダル -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUserModal()">&times;</span>
+            <h2 id="modalTitle">ユーザー編集</h2>
+            
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="userId">ユーザーID</label>
+                    <input type="text" id="userId" class="form-control" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userName">ユーザー名</label>
+                    <input type="text" id="userName" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userRole">ロール</label>
+                    <select id="userRole" class="form-control" required>
+                        <option value="">選択してください</option>
+                        <option value="R01">管理職 (R01)</option>
+                        <option value="R02">営業担当 (R02)</option>
+                        <option value="R03">在庫管理者 (R03)</option>
+                        <option value="R04">システム管理者 (R04)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userOrg">所属組織</label>
+                    <div id="userOrgContainer">
+                        <!-- 動的に組織選択を生成 -->
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userStatus">状態</label>
+                    <select id="userStatus" class="form-control">
+                        <option value="active">有効</option>
+                        <option value="inactive">無効</option>
+                    </select>
+                </div>
+                
+                <div class="actions">
+                    <button type="submit" class="btn btn-success">保存</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">キャンセル</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/user-switcher.js"></script>
+    <script src="/static/js/user-admin.js"></script>
+    <script src="/static/js/side-menu.js"></script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - 権限管理システム</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .login-header p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .user-select {
+            margin-bottom: 20px;
+        }
+        .user-option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .user-option:hover {
+            border-color: #3498db;
+            background: #e8f4f8;
+        }
+        .user-option.selected {
+            border-color: #3498db;
+            background: #e8f4f8;
+        }
+        .user-option-header {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .user-option-desc {
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+        .login-button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .login-button:hover {
+            background: #2980b9;
+        }
+        .login-button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>権限管理システム</h1>
+            <p>使用するユーザーを選択してログインしてください</p>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+
+        <div class="user-select">
+            <div class="user-option" onclick="selectUser('user001')">
+                <div class="user-option-header">管理職ユーザー (user001)</div>
+                <div class="user-option-desc">ロール: 管理職 (R01) - 予算管理画面にアクセス可能</div>
+            </div>
+            <div class="user-option" onclick="selectUser('user002')">
+                <div class="user-option-header">営業担当ユーザー (user002)</div>
+                <div class="user-option-desc">ロール: 営業担当 (R02) - 販売管理画面にアクセス可能</div>
+            </div>
+            <div class="user-option" onclick="selectUser('user003')">
+                <div class="user-option-header">在庫管理者ユーザー (user003)</div>
+                <div class="user-option-desc">ロール: 在庫管理者 (R03) - 在庫管理画面にアクセス可能</div>
+            </div>
+            <div class="user-option" onclick="selectUser('admin')">
+                <div class="user-option-header">システム管理者 (admin)</div>
+                <div class="user-option-desc">ロール: システム管理者 (R04) - すべての画面にアクセス可能</div>
+            </div>
+        </div>
+
+        <button id="login-button" class="login-button" onclick="login()" disabled>
+            ログイン
+        </button>
+    </div>
+
+    <script>
+        let selectedUser = null;
+
+        function selectUser(userId) {
+            selectedUser = userId;
+            
+            // すべての選択肢から選択状態を解除
+            document.querySelectorAll('.user-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 選択した項目に選択状態を追加
+            event.currentTarget.classList.add('selected');
+            
+            // ログインボタンを有効化
+            document.getElementById('login-button').disabled = false;
+        }
+
+        async function login() {
+            if (!selectedUser) return;
+
+            const button = document.getElementById('login-button');
+            const errorDiv = document.getElementById('error-message');
+            
+            button.disabled = true;
+            button.textContent = 'ログイン中...';
+            errorDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ user_id: selectedUser })
+                });
+
+                if (response.ok) {
+                    // ログイン成功 - メインページにリダイレクト
+                    window.location.href = '/';
+                } else {
+                    const error = await response.text();
+                    errorDiv.textContent = `ログインエラー: ${error}`;
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = `ネットワークエラー: ${error.message}`;
+                errorDiv.style.display = 'block';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'ログイン';
+            }
+        }
+
+        // Enterキーでログイン
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && selectedUser) {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>

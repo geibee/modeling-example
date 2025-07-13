@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>販売管理画面</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>販売管理システム</h1>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>販売データ管理</h2>
+            
+            <div id="access-info" class="alert alert-info">
+                <p>ログインユーザー: <span id="user-id"></span></p>
+                <p>ロール: <span id="roles"></span></p>
+                <p>所属組織: <span id="organizations"></span></p>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-success" onclick="addSalesData()">新規販売データ追加</button>
+                <button class="btn btn-secondary" onclick="refreshData()">データ更新</button>
+            </div>
+
+            <table id="sales-table">
+                <thead>
+                    <tr>
+                        <th>販売ID</th>
+                        <th>組織</th>
+                        <th>商品名</th>
+                        <th>数量</th>
+                        <th>金額</th>
+                        <th>販売日</th>
+                        <th>アクション</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="7" style="text-align: center;">データを読み込み中...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>売上統計</h2>
+            <div id="statistics">
+                <p>総売上: <span id="total-sales">¥0</span></p>
+                <p>取引件数: <span id="transaction-count">0</span></p>
+                <p>平均単価: <span id="average-price">¥0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 共通のdisplayUserInfo関数を使用
+
+        // 販売データの取得（モック）
+        async function loadSalesData() {
+            try {
+                // 実際のアプリケーションではback-sales APIを呼び出す
+                const response = await fetch('/back-sales', {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displaySalesData(data);
+                    updateStatistics(data);
+                } else if (response.status === 403) {
+                    showError('この画面へのアクセス権限がありません');
+                } else {
+                    // モックデータを表示
+                    const mockData = [
+                        { id: 'S001', product: 'ノートPC', quantity: 2, amount: 300000, date: '2024-01-15' },
+                        { id: 'S002', product: 'モニター', quantity: 5, amount: 250000, date: '2024-01-16' },
+                        { id: 'S003', product: 'キーボード', quantity: 10, amount: 80000, date: '2024-01-17' }
+                    ];
+                    displaySalesData(mockData);
+                    updateStatistics(mockData);
+                }
+            } catch (error) {
+                console.error('データ取得エラー:', error);
+                showError('データの取得に失敗しました');
+            }
+        }
+
+        // 販売データを表示
+        function displaySalesData(data) {
+            const tbody = document.querySelector('#sales-table tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(item => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${item.id}</td>
+                    <td>${item.org_name || item.org_id || '-'}</td>
+                    <td>${item.product}</td>
+                    <td>${item.quantity}</td>
+                    <td>¥${item.amount.toLocaleString()}</td>
+                    <td>${item.date}</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="editSales('${item.id}')">編集</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSales('${item.id}')">削除</button>
+                    </td>
+                `;
+            });
+        }
+
+        // 統計情報を更新
+        function updateStatistics(data) {
+            const totalSales = data.reduce((sum, item) => sum + item.amount, 0);
+            const transactionCount = data.length;
+            const averagePrice = transactionCount > 0 ? totalSales / transactionCount : 0;
+            
+            document.getElementById('total-sales').textContent = `¥${totalSales.toLocaleString()}`;
+            document.getElementById('transaction-count').textContent = transactionCount;
+            document.getElementById('average-price').textContent = `¥${Math.round(averagePrice).toLocaleString()}`;
+        }
+
+        // エラー表示
+        function showError(message) {
+            const tbody = document.querySelector('#sales-table tbody');
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">${message}</td></tr>`;
+        }
+
+        // ダミー関数
+        function addSalesData() {
+            alert('新規販売データ追加機能は準備中です');
+        }
+
+        function editSales(id) {
+            alert(`販売ID ${id} の編集機能は準備中です`);
+        }
+
+        function deleteSales(id) {
+            if (confirm(`販売ID ${id} を削除しますか？`)) {
+                alert('削除機能は準備中です');
+            }
+        }
+
+        function refreshData() {
+            loadSalesData();
+        }
+
+        // ページ読み込み時の初期化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // ユーザー情報を先に読み込む
+            await displayUserInfo();
+            // ユーザー情報の読み込みが完了してから販売データを読み込む
+            loadSalesData();
+        });
+    </script>
+    <script src="/static/js/common-user-info.js"></script>
+    <script src="/static/js/user-switcher.js"></script>
+    <script src="/static/js/side-menu.js"></script>
+</body>
+</html>
